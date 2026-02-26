@@ -169,4 +169,33 @@ If you have any ideas or suggestions, please feel free to raise Issues or join t
    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=78/xiaozhi-esp32&type=Date" />
    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=78/xiaozhi-esp32&type=Date" />
  </picture>
-</a> 
+</a>
+
+
+---
+
+## 📜 Attribution / 归属说明
+
+This project is a modified version based on the original work:
+
+**Original Project**: [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)  
+**Original Author**: [78](https://github.com/78)  
+**License**: MIT
+
+本项目基于原始开源项目修改而来：
+- **原始项目**：[xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)
+- **原作者**：[78](https://github.com/78)
+- **许可证**：MIT
+
+### 主要修改 / Main Modifications
+
+- New partition table (incompatible with v1)
+- Memory optimization
+- Pet memory system enhancements
+- Additional features in beta testing
+
+感谢原作者的开源贡献！ 🙏
+
+---
+
+**⭐ If you find this project useful, please also star the [original repository](https://github.com/78/xiaozhi-esp32)!**
