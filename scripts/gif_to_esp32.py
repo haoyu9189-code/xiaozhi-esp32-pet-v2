@@ -1,0 +1,411 @@
+#!/usr/bin/env python3
+"""
+GIF/PNG to ESP32 Animation Converter
+
+将 GIF 动画和背景图片转换为 ESP32 可用的格式
+自动检测背景色并生成对应的颜色范围配置
+
+使用方法:
+    # 处理动画 GIF 文件
+    python gif_to_esp32.py anim1.gif anim2.gif -o gifs/
+
+    # 处理背景图片
+    python gif_to_esp32.py --backgrounds bg1.png bg2.png -o gifs/
+
+    # 同时处理 (先动画后背景)
+    python gif_to_esp32.py anim1.gif anim2.gif --backgrounds bg1.png bg2.png -o gifs/
+
+输出文件:
+    - frames.bin: 动画帧数据 (无头 RGB888 索引格式)
+    - backgrounds.bin: 背景帧数据 (无头 RGB888 索引格式)
+    - index.json: 帧信息和背景色范围
+    - bg_color_config.h: C 头文件，包含背景色范围定义
+"""
+
+import os
+import sys
+import json
+import argparse
+from PIL import Image
+import struct
+import glob as glob_module
+
+def rgb_to_rgb565(r, g, b):
+    """RGB888 转 RGB565"""
+    return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3)
+
+def analyze_gif(gif_path):
+    """分析 GIF 文件，提取帧和背景色信息"""
+    img = Image.open(gif_path)
+
+    frames = []
+    bg_colors = []
+
+    frame_idx = 0
+    try:
+        while True:
+            # 转换为 P 模式 (调色板模式)
+            frame = img.convert('P', palette=Image.ADAPTIVE, colors=256)
+            palette = frame.getpalette()
+            pixels = list(frame.getdata())
+
+            width, height = frame.size
+
+            # 检测背景色 - 假设四个角的颜色是背景色
+            corners = [
+                pixels[0],  # 左上
+                pixels[width - 1],  # 右上
+                pixels[(height - 1) * width],  # 左下
+                pixels[(height - 1) * width + width - 1],  # 右下
+            ]
+
+            # 找出出现最多的角落颜色作为背景色索引
+            bg_idx = max(set(corners), key=corners.count)
+
+            # 获取背景色 RGB
+            bg_r = palette[bg_idx * 3]
+            bg_g = palette[bg_idx * 3 + 1]
+            bg_b = palette[bg_idx * 3 + 2]
+
+            frames.append({
+                'width': width,
+                'height': height,
+                'palette': palette[:768],  # 256 * 3
+                'pixels': pixels,
+                'bg_color_index': bg_idx,
+                'bg_color_rgb': [bg_r, bg_g, bg_b]
+            })
+
+            bg_colors.append((bg_r, bg_g, bg_b))
+
+            frame_idx += 1
+            img.seek(frame_idx)
+
+    except EOFError:
+        pass
+
+    return frames, bg_colors
+
+def calculate_bg_range(bg_colors):
+    """计算背景色范围"""
+    if not bg_colors:
+        return None
+
+    r_values = [c[0] for c in bg_colors]
+    g_values = [c[1] for c in bg_colors]
+    b_values = [c[2] for c in bg_colors]
+
+    # 添加一些余量
+    margin = 10
+
+    r_min = max(0, min(r_values) - margin)
+    r_max = min(255, max(r_values) + margin)
+    g_min = max(0, min(g_values) - margin)
+    g_max = min(255, max(g_values) + margin)
+    b_min = max(0, min(b_values) - margin)
+    b_max = min(255, max(b_values) + margin)
+
+    return {
+        'rgb888': {
+            'r_min': r_min, 'r_max': r_max,
+            'g_min': g_min, 'g_max': g_max,
+            'b_min': b_min, 'b_max': b_max,
+        },
+        'rgb565': {
+            'r_min': r_min >> 3, 'r_max': r_max >> 3,
+            'g_min': g_min >> 2, 'g_max': g_max >> 2,
+            'b_min': b_min >> 3, 'b_max': b_max >> 3,
+        }
+    }
+
+def write_frames_bin(frames, output_path):
+    """写入 frames.bin 文件 (无头格式)"""
+    with open(output_path, 'wb') as f:
+        for frame in frames:
+            # 写入 RGB888 调色板 (768 bytes)
+            f.write(bytes(frame['palette']))
+
+            # 写入像素索引
+            f.write(bytes(frame['pixels']))
+
+def write_index_json(frames, bg_range, animations, backgrounds_info, output_path):
+    """写入 index.json 文件"""
+    if not frames and not backgrounds_info:
+        return
+
+    data = {}
+
+    # 动画帧信息
+    if frames:
+        frame_size = 768 + frames[0]['width'] * frames[0]['height']  # palette + pixels
+        data.update({
+            'width': frames[0]['width'],
+            'height': frames[0]['height'],
+            'colors': 256,
+            'frame_size': frame_size,
+            'total_frames': len(frames),
+            'frames': [
+                {
+                    'bg_color_rgb': f['bg_color_rgb'],
+                    'bg_color_index': f['bg_color_index']
+                }
+                for f in frames
+            ],
+            'animations': animations,
+            'bg_color_range': bg_range
+        })
+
+    # 背景帧信息
+    if backgrounds_info:
+        bg_frame_size = 768 + backgrounds_info['width'] * backgrounds_info['height']
+        data.update({
+            'bg_width': backgrounds_info['width'],
+            'bg_height': backgrounds_info['height'],
+            'bg_frame_size': bg_frame_size,
+            'backgrounds': backgrounds_info['backgrounds']
+        })
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def write_bg_config_header(bg_range, output_path):
+    """写入 C 头文件"""
+    if not bg_range:
+        return
+
+    rgb565 = bg_range['rgb565']
+    rgb888 = bg_range['rgb888']
+
+    content = f"""// Auto-generated background color range configuration
+// Generated by gif_to_esp32.py
+
+#ifndef _BG_COLOR_CONFIG_H_
+#define _BG_COLOR_CONFIG_H_
+
+// Background color range for transparency detection
+// RGB888 range: R({rgb888['r_min']}-{rgb888['r_max']}), G({rgb888['g_min']}-{rgb888['g_max']}), B({rgb888['b_min']}-{rgb888['b_max']})
+// Convert to RGB565 thresholds
+#define BG_R_MIN  {rgb565['r_min']}
+#define BG_R_MAX  {rgb565['r_max']}
+#define BG_G_MIN  {rgb565['g_min']}
+#define BG_G_MAX  {rgb565['g_max']}
+#define BG_B_MIN  {rgb565['b_min']}
+#define BG_B_MAX  {rgb565['b_max']}
+
+// Helper: Check if RGB565 pixel is within background color range
+static inline bool is_background_color(uint16_t pixel) {{
+    uint8_t r = (pixel >> 11) & 0x1F;  // 5-bit red
+    uint8_t g = (pixel >> 5) & 0x3F;   // 6-bit green
+    uint8_t b = pixel & 0x1F;          // 5-bit blue
+    return (r >= BG_R_MIN && r <= BG_R_MAX &&
+            g >= BG_G_MIN && g <= BG_G_MAX &&
+            b >= BG_B_MIN && b <= BG_B_MAX);
+}}
+
+#endif // _BG_COLOR_CONFIG_H_
+"""
+
+    with open(output_path, 'w') as f:
+        f.write(content)
+
+def process_multiple_gifs(gif_files, output_dir, frames_per_anim=13):
+    """处理多个 GIF 文件，合并成一个 frames.bin"""
+    all_frames = []
+    all_bg_colors = []
+    animations = []
+
+    start_frame = 0
+
+    for gif_path in gif_files:
+        print(f"Processing: {gif_path}")
+        frames, bg_colors = analyze_gif(gif_path)
+
+        # 如果帧数超过 frames_per_anim，截取
+        if len(frames) > frames_per_anim:
+            frames = frames[:frames_per_anim]
+            bg_colors = bg_colors[:frames_per_anim]
+        # 如果帧数不足，重复最后一帧
+        while len(frames) < frames_per_anim:
+            frames.append(frames[-1])
+            bg_colors.append(bg_colors[-1])
+
+        all_frames.extend(frames)
+        all_bg_colors.extend(bg_colors)
+
+        # 提取动画名称
+        name = os.path.splitext(os.path.basename(gif_path))[0]
+        animations.append({
+            'name': name,
+            'start': start_frame,
+            'count': len(frames)
+        })
+
+        start_frame += len(frames)
+        print(f"  - {len(frames)} frames, bg_color range: {min(bg_colors)} - {max(bg_colors)}")
+
+    # 计算背景色范围
+    bg_range = calculate_bg_range(all_bg_colors)
+
+    # 创建输出目录
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 写入 frames.bin
+    frames_bin_path = os.path.join(output_dir, 'frames.bin')
+    write_frames_bin(all_frames, frames_bin_path)
+
+    print(f"\nAnimation output: {frames_bin_path} ({os.path.getsize(frames_bin_path)} bytes)")
+
+    if bg_range:
+        print(f"\nBackground color range (RGB888):")
+        print(f"  R: {bg_range['rgb888']['r_min']}-{bg_range['rgb888']['r_max']}")
+        print(f"  G: {bg_range['rgb888']['g_min']}-{bg_range['rgb888']['g_max']}")
+        print(f"  B: {bg_range['rgb888']['b_min']}-{bg_range['rgb888']['b_max']}")
+        print(f"\nBackground color range (RGB565):")
+        print(f"  R: {bg_range['rgb565']['r_min']}-{bg_range['rgb565']['r_max']}")
+        print(f"  G: {bg_range['rgb565']['g_min']}-{bg_range['rgb565']['g_max']}")
+        print(f"  B: {bg_range['rgb565']['b_min']}-{bg_range['rgb565']['b_max']}")
+
+    return all_frames, bg_range, animations
+
+
+def process_background_image(img_path, target_width=280, target_height=240):
+    """处理单个背景图片"""
+    img = Image.open(img_path)
+
+    # 调整尺寸 (如果需要)
+    if img.size != (target_width, target_height):
+        img = img.resize((target_width, target_height), Image.LANCZOS)
+        print(f"  Resized to {target_width}x{target_height}")
+
+    # 转换为 P 模式 (调色板模式)
+    frame = img.convert('P', palette=Image.ADAPTIVE, colors=256)
+    palette = frame.getpalette()
+    pixels = list(frame.getdata())
+
+    return {
+        'width': target_width,
+        'height': target_height,
+        'palette': palette[:768],  # 256 * 3
+        'pixels': pixels,
+    }
+
+
+def process_backgrounds(bg_files, output_dir, target_width=280, target_height=240):
+    """处理多个背景图片，合并成一个 backgrounds.bin"""
+    all_frames = []
+    backgrounds_list = []
+
+    for idx, bg_path in enumerate(bg_files):
+        print(f"Processing background: {bg_path}")
+        frame = process_background_image(bg_path, target_width, target_height)
+        all_frames.append(frame)
+
+        # 提取背景名称
+        name = os.path.splitext(os.path.basename(bg_path))[0]
+        backgrounds_list.append({
+            'name': name,
+            'frame': idx
+        })
+
+        print(f"  - {name}: {frame['width']}x{frame['height']}")
+
+    if not all_frames:
+        return None
+
+    # 创建输出目录
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 写入 backgrounds.bin
+    bg_bin_path = os.path.join(output_dir, 'backgrounds.bin')
+    write_frames_bin(all_frames, bg_bin_path)
+
+    print(f"\nBackground output: {bg_bin_path} ({os.path.getsize(bg_bin_path)} bytes)")
+
+    return {
+        'width': target_width,
+        'height': target_height,
+        'backgrounds': backgrounds_list
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Convert GIF animations and background images to ESP32 format',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    # Process animation GIFs only
+    python gif_to_esp32.py anim1.gif anim2.gif -o gifs/
+
+    # Process background images only
+    python gif_to_esp32.py --backgrounds bg1.png bg2.png -o gifs/
+
+    # Process both animations and backgrounds
+    python gif_to_esp32.py anim1.gif anim2.gif --backgrounds bg1.png bg2.png -o gifs/
+
+    # Use wildcards
+    python gif_to_esp32.py animations/*.gif --backgrounds backgrounds/*.png -o gifs/
+        """)
+    parser.add_argument('input', nargs='*', help='Input GIF animation file(s)')
+    parser.add_argument('-o', '--output', default='gifs', help='Output directory (default: gifs)')
+    parser.add_argument('-f', '--frames', type=int, default=13, help='Frames per animation (default: 13)')
+    parser.add_argument('--backgrounds', '-b', nargs='+', help='Background image file(s)')
+    parser.add_argument('--bg-width', type=int, default=280, help='Background width (default: 280)')
+    parser.add_argument('--bg-height', type=int, default=240, help='Background height (default: 240)')
+    parser.add_argument('--anim-width', type=int, default=160, help='Animation width (default: 160)')
+    parser.add_argument('--anim-height', type=int, default=160, help='Animation height (default: 160)')
+
+    args = parser.parse_args()
+
+    if not args.input and not args.backgrounds:
+        parser.print_help()
+        print("\nError: Please provide animation GIFs and/or background images")
+        sys.exit(1)
+
+    all_frames = []
+    bg_range = None
+    animations = []
+    backgrounds_info = None
+
+    # 处理动画 GIF
+    if args.input:
+        print("=" * 50)
+        print("Processing animations...")
+        print("=" * 50)
+        all_frames, bg_range, animations = process_multiple_gifs(args.input, args.output, args.frames)
+
+    # 处理背景图片
+    if args.backgrounds:
+        print("\n" + "=" * 50)
+        print("Processing backgrounds...")
+        print("=" * 50)
+        backgrounds_info = process_backgrounds(
+            args.backgrounds, args.output,
+            args.bg_width, args.bg_height
+        )
+
+    # 写入 index.json (包含动画和背景信息)
+    index_json_path = os.path.join(args.output, 'index.json')
+    write_index_json(all_frames, bg_range, animations, backgrounds_info, index_json_path)
+    print(f"\nIndex file: {index_json_path}")
+
+    # 写入 C 头文件 (如果有动画)
+    if bg_range:
+        bg_config_path = os.path.join(args.output, 'bg_color_config.h')
+        write_bg_config_header(bg_range, bg_config_path)
+        print(f"Config header: {bg_config_path}")
+
+    print("\n" + "=" * 50)
+    print("Done!")
+    print("=" * 50)
+
+    # 打印使用说明
+    print("\nNext steps:")
+    print("1. Copy the generated files to your ESP32 project's gifs/ folder")
+    print("2. If bg_color_config.h was generated, copy the #define values to your")
+    print("   display code's background color range detection")
+    print("3. Flash the assets partition with flash_assets.bat")
+
+
+if __name__ == '__main__':
+    main()

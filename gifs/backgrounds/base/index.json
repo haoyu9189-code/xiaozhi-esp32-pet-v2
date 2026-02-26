@@ -1,0 +1,16 @@
+{
+  "width": 280,
+  "height": 190,
+  "colors": 64,
+  "bg_color_idx": 59,
+  "total_frames": 1,
+  "frame_size": 53200,
+  "backgrounds": [
+    {
+      "name": "base",
+      "label": "基础背景",
+      "start": 0,
+      "count": 1
+    }
+  ]
+}

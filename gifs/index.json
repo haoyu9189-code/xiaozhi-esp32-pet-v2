@@ -1,0 +1,904 @@
+{
+  "width": 160,
+  "height": 160,
+  "colors": 256,
+  "frame_size": 26368,
+  "total_frames": 104,
+  "frames": [
+    {
+      "bg_color_rgb": [
+        5,
+        154,
+        90
+      ],
+      "bg_color_index": 77
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        157,
+        90
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        157,
+        90
+      ],
+      "bg_color_index": 73
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        158,
+        87
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        158,
+        87
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        89
+      ],
+      "bg_color_index": 71
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        88
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        88
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        88
+      ],
+      "bg_color_index": 66
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        88
+      ],
+      "bg_color_index": 71
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        88
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        160,
+        88
+      ],
+      "bg_color_index": 65
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        160,
+        89
+      ],
+      "bg_color_index": 62
+    },
+    {
+      "bg_color_rgb": [
+        2,
+        152,
+        87
+      ],
+      "bg_color_index": 84
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        156,
+        88
+      ],
+      "bg_color_index": 77
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        157,
+        87
+      ],
+      "bg_color_index": 74
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        157,
+        86
+      ],
+      "bg_color_index": 72
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        157,
+        87
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        86
+      ],
+      "bg_color_index": 65
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        158,
+        86
+      ],
+      "bg_color_index": 66
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 65
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        88
+      ],
+      "bg_color_index": 64
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        86
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        86
+      ],
+      "bg_color_index": 72
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 73
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        87
+      ],
+      "bg_color_index": 74
+    },
+    {
+      "bg_color_rgb": [
+        3,
+        154,
+        87
+      ],
+      "bg_color_index": 75
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        156,
+        89
+      ],
+      "bg_color_index": 76
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        157,
+        88
+      ],
+      "bg_color_index": 72
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        87
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        87
+      ],
+      "bg_color_index": 71
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        160,
+        88
+      ],
+      "bg_color_index": 68
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        160,
+        87
+      ],
+      "bg_color_index": 68
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        160,
+        88
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        160,
+        88
+      ],
+      "bg_color_index": 68
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        160,
+        88
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        160,
+        88
+      ],
+      "bg_color_index": 73
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        88
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        159,
+        88
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        169,
+        105
+      ],
+      "bg_color_index": 129
+    },
+    {
+      "bg_color_rgb": [
+        13,
+        174,
+        109
+      ],
+      "bg_color_index": 115
+    },
+    {
+      "bg_color_rgb": [
+        16,
+        176,
+        111
+      ],
+      "bg_color_index": 105
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        177,
+        111
+      ],
+      "bg_color_index": 102
+    },
+    {
+      "bg_color_rgb": [
+        21,
+        177,
+        111
+      ],
+      "bg_color_index": 97
+    },
+    {
+      "bg_color_rgb": [
+        21,
+        179,
+        112
+      ],
+      "bg_color_index": 99
+    },
+    {
+      "bg_color_rgb": [
+        21,
+        179,
+        113
+      ],
+      "bg_color_index": 94
+    },
+    {
+      "bg_color_rgb": [
+        21,
+        178,
+        111
+      ],
+      "bg_color_index": 93
+    },
+    {
+      "bg_color_rgb": [
+        22,
+        178,
+        112
+      ],
+      "bg_color_index": 96
+    },
+    {
+      "bg_color_rgb": [
+        22,
+        178,
+        112
+      ],
+      "bg_color_index": 94
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        178,
+        111
+      ],
+      "bg_color_index": 90
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        178,
+        111
+      ],
+      "bg_color_index": 92
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        178,
+        110
+      ],
+      "bg_color_index": 88
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        166,
+        105
+      ],
+      "bg_color_index": 84
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        168,
+        106
+      ],
+      "bg_color_index": 79
+    },
+    {
+      "bg_color_rgb": [
+        20,
+        169,
+        107
+      ],
+      "bg_color_index": 73
+    },
+    {
+      "bg_color_rgb": [
+        19,
+        171,
+        107
+      ],
+      "bg_color_index": 70
+    },
+    {
+      "bg_color_rgb": [
+        18,
+        171,
+        107
+      ],
+      "bg_color_index": 71
+    },
+    {
+      "bg_color_rgb": [
+        17,
+        172,
+        106
+      ],
+      "bg_color_index": 65
+    },
+    {
+      "bg_color_rgb": [
+        17,
+        172,
+        107
+      ],
+      "bg_color_index": 62
+    },
+    {
+      "bg_color_rgb": [
+        17,
+        171,
+        105
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        17,
+        171,
+        105
+      ],
+      "bg_color_index": 64
+    },
+    {
+      "bg_color_rgb": [
+        16,
+        171,
+        106
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        17,
+        172,
+        105
+      ],
+      "bg_color_index": 61
+    },
+    {
+      "bg_color_rgb": [
+        18,
+        171,
+        107
+      ],
+      "bg_color_index": 65
+    },
+    {
+      "bg_color_rgb": [
+        16,
+        172,
+        106
+      ],
+      "bg_color_index": 64
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        154,
+        89
+      ],
+      "bg_color_index": 75
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        156,
+        90
+      ],
+      "bg_color_index": 72
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        156,
+        90
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        158,
+        88
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        158,
+        88
+      ],
+      "bg_color_index": 66
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        87
+      ],
+      "bg_color_index": 62
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        159,
+        89
+      ],
+      "bg_color_index": 58
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 59
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 64
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        159,
+        87
+      ],
+      "bg_color_index": 62
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        159,
+        87
+      ],
+      "bg_color_index": 66
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 67
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        158,
+        87
+      ],
+      "bg_color_index": 69
+    },
+    {
+      "bg_color_rgb": [
+        5,
+        157,
+        97
+      ],
+      "bg_color_index": 90
+    },
+    {
+      "bg_color_rgb": [
+        7,
+        162,
+        98
+      ],
+      "bg_color_index": 78
+    },
+    {
+      "bg_color_rgb": [
+        6,
+        162,
+        98
+      ],
+      "bg_color_index": 82
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        164,
+        99
+      ],
+      "bg_color_index": 77
+    },
+    {
+      "bg_color_rgb": [
+        9,
+        163,
+        98
+      ],
+      "bg_color_index": 78
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        163,
+        98
+      ],
+      "bg_color_index": 78
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        163,
+        98
+      ],
+      "bg_color_index": 78
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        163,
+        98
+      ],
+      "bg_color_index": 78
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        163,
+        98
+      ],
+      "bg_color_index": 79
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        163,
+        98
+      ],
+      "bg_color_index": 79
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        164,
+        98
+      ],
+      "bg_color_index": 74
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        164,
+        98
+      ],
+      "bg_color_index": 73
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        165,
+        98
+      ],
+      "bg_color_index": 72
+    },
+    {
+      "bg_color_rgb": [
+        8,
+        173,
+        107
+      ],
+      "bg_color_index": 59
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        178,
+        109
+      ],
+      "bg_color_index": 49
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        178,
+        108
+      ],
+      "bg_color_index": 47
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        179,
+        107
+      ],
+      "bg_color_index": 50
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        179,
+        108
+      ],
+      "bg_color_index": 53
+    },
+    {
+      "bg_color_rgb": [
+        11,
+        179,
+        108
+      ],
+      "bg_color_index": 54
+    },
+    {
+      "bg_color_rgb": [
+        11,
+        180,
+        108
+      ],
+      "bg_color_index": 54
+    },
+    {
+      "bg_color_rgb": [
+        11,
+        179,
+        107
+      ],
+      "bg_color_index": 51
+    },
+    {
+      "bg_color_rgb": [
+        11,
+        179,
+        107
+      ],
+      "bg_color_index": 51
+    },
+    {
+      "bg_color_rgb": [
+        11,
+        179,
+        107
+      ],
+      "bg_color_index": 50
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        179,
+        108
+      ],
+      "bg_color_index": 49
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        180,
+        109
+      ],
+      "bg_color_index": 43
+    },
+    {
+      "bg_color_rgb": [
+        10,
+        180,
+        109
+      ],
+      "bg_color_index": 41
+    }
+  ],
+  "animations": [
+    {
+      "name": "talk",
+      "start": 0,
+      "count": 13
+    },
+    {
+      "name": "pet_head",
+      "start": 13,
+      "count": 13
+    },
+    {
+      "name": "idle",
+      "start": 26,
+      "count": 13
+    },
+    {
+      "name": "walk",
+      "start": 39,
+      "count": 13
+    },
+    {
+      "name": "sleep",
+      "start": 52,
+      "count": 13
+    },
+    {
+      "name": "listen",
+      "start": 65,
+      "count": 13
+    },
+    {
+      "name": "bath",
+      "start": 78,
+      "count": 13
+    },
+    {
+      "name": "eat",
+      "start": 91,
+      "count": 13
+    }
+  ],
+  "bg_width": 280,
+  "bg_height": 240,
+  "bg_frame_size": 67968,
+  "backgrounds": [
+    {
+      "name": "day",
+      "frame": 0
+    },
+    {
+      "name": "sunrise",
+      "frame": 1
+    },
+    {
+      "name": "sunset",
+      "frame": 2
+    },
+    {
+      "name": "night",
+      "frame": 3
+    }
+  ]
+}
