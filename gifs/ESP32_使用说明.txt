@@ -1,0 +1,304 @@
+=====================================
+ESP32 表情动画播放 - 使用说明
+=====================================
+
+文件清单:
+  gifs/
+  ├── frames.bin        # 动画数据 (160×160)
+  ├── backgrounds.bin   # 背景数据 (280×240, 可选)
+  ├── index.json        # 索引文件
+  └── ESP32_使用说明.txt
+
+=====================================
+一、frames.bin 格式 (动画 160×160)
+=====================================
+
+无文件头，直接存储帧数据。
+每帧结构: [调色板] + [像素索引]
+
+帧数据:
+  - 调色板: colors * 3 bytes (RGB888)
+  - 像素:   width * height bytes (索引值)
+
+每帧大小 = colors*3 + width*height
+
+示例 (160×160, P256):
+  frame_size = 256*3 + 160*160 = 768 + 25600 = 26368 bytes
+
+=====================================
+二、backgrounds.bin 格式 (背景 280×240)
+=====================================
+
+与 frames.bin 格式相同，但尺寸不同。
+独立文件，可选使用。
+
+每帧结构: [调色板 RGB888] + [像素索引]
+
+示例 (280×240, P256):
+  bg_frame_size = 256*3 + 280*240 = 768 + 67200 = 67968 bytes
+
+=====================================
+三、index.json 格式
+=====================================
+
+{
+  // 动画参数
+  "width": 160,
+  "height": 160,
+  "colors": 256,
+  "frame_size": 26368,
+  "total_frames": 78,
+
+  // 每一帧独立记录背景色RGB和索引
+  "frames": [
+    {"bg_color_rgb": [79, 240, 156], "bg_color_index": 1},   // 帧0
+    {"bg_color_rgb": [80, 238, 155], "bg_color_index": 2},   // 帧1
+    {"bg_color_rgb": [79, 241, 157], "bg_color_index": 1},   // 帧2
+    ...  // 共 total_frames 个
+  ],
+
+  // 动画列表
+  "animations": [
+    {"name": "idle", "start": 0, "count": 13},
+    {"name": "walk", "start": 13, "count": 13},
+    {"name": "jump", "start": 26, "count": 10},
+    ...
+  ],
+
+  // 背景参数 (独立尺寸)
+  "bg_width": 280,
+  "bg_height": 240,
+  "bg_frame_size": 67968,
+  "backgrounds": [
+    {"name": "base", "frame": 0},
+    {"name": "day", "frame": 1},
+    ...
+  ]
+}
+
+字段说明:
+  width/height      - 动画帧尺寸 (160×160)
+  colors            - 调色板颜色数 (共用)
+  frame_size        - 动画每帧字节数
+  total_frames      - 动画总帧数
+
+  frames[]                  - 每一帧的背景色信息
+  frames[].bg_color_rgb     - 该帧检测到的背景色RGB值
+  frames[].bg_color_index   - 该帧调色板中的背景色索引
+
+  bg_width/bg_height - 背景尺寸 (280×240)
+  bg_frame_size      - 背景每帧字节数
+  backgrounds        - 背景列表
+
+=====================================
+四、ESP32 解码示例
+=====================================
+
+#include <SD.h>
+#include <TFT_eSPI.h>
+#include <ArduinoJson.h>
+
+TFT_eSPI tft;
+
+// 动画参数
+int anim_width, anim_height, anim_frame_size;
+int bg_width, bg_height, bg_frame_size;
+int colors, palette_size;
+
+// 动画信息
+struct AnimInfo {
+    int start;
+    int count;
+    uint8_t bg_color_index;
+};
+AnimInfo animations[32];
+int anim_count = 0;
+
+uint16_t palette[256];
+uint16_t* framebuffer;
+
+void setup() {
+    SD.begin();
+    tft.init();
+
+    File jsonFile = SD.open("/gifs/index.json");
+    StaticJsonDocument<4096> doc;
+    deserializeJson(doc, jsonFile);
+    jsonFile.close();
+
+    // 读取参数
+    anim_width = doc["width"];
+    anim_height = doc["height"];
+    anim_frame_size = doc["frame_size"];
+    colors = doc["colors"];
+    palette_size = colors * 3;
+
+    bg_width = doc["bg_width"] | 280;
+    bg_height = doc["bg_height"] | 240;
+    bg_frame_size = doc["bg_frame_size"] | 67968;
+
+    // 读取动画列表
+    JsonArray anims = doc["animations"];
+    anim_count = 0;
+    for (JsonObject anim : anims) {
+        animations[anim_count].start = anim["start"];
+        animations[anim_count].count = anim["count"];
+        animations[anim_count].bg_color_index = anim["bg_color_index"] | 0;
+        anim_count++;
+    }
+
+    framebuffer = (uint16_t*)malloc(bg_width * bg_height * 2);
+}
+
+uint16_t rgb888to565(uint8_t r, uint8_t g, uint8_t b) {
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
+
+// 播放动画帧
+void playAnimationFrame(int frame_idx) {
+    File file = SD.open("/gifs/frames.bin");
+    file.seek((size_t)frame_idx * anim_frame_size);
+
+    uint8_t* pal_data = (uint8_t*)malloc(palette_size);
+    file.read(pal_data, palette_size);
+    for (int i = 0; i < colors; i++) {
+        palette[i] = rgb888to565(pal_data[i*3], pal_data[i*3+1], pal_data[i*3+2]);
+    }
+    free(pal_data);
+
+    int pixel_count = anim_width * anim_height;
+    uint8_t* pixels = (uint8_t*)malloc(pixel_count);
+    file.read(pixels, pixel_count);
+    file.close();
+
+    for (int i = 0; i < pixel_count; i++) {
+        framebuffer[i] = palette[pixels[i]];
+    }
+    free(pixels);
+
+    tft.pushImage(0, 0, anim_width, anim_height, framebuffer);
+}
+
+// 显示背景
+void showBackground(int bg_idx) {
+    File file = SD.open("/gifs/backgrounds.bin");
+    file.seek((size_t)bg_idx * bg_frame_size);
+
+    uint8_t* pal_data = (uint8_t*)malloc(palette_size);
+    file.read(pal_data, palette_size);
+    for (int i = 0; i < colors; i++) {
+        palette[i] = rgb888to565(pal_data[i*3], pal_data[i*3+1], pal_data[i*3+2]);
+    }
+    free(pal_data);
+
+    int pixel_count = bg_width * bg_height;
+    uint8_t* pixels = (uint8_t*)malloc(pixel_count);
+    file.read(pixels, pixel_count);
+    file.close();
+
+    for (int i = 0; i < pixel_count; i++) {
+        framebuffer[i] = palette[pixels[i]];
+    }
+    free(pixels);
+
+    tft.pushImage(0, 0, bg_width, bg_height, framebuffer);
+}
+
+=====================================
+五、动画+背景透明合成
+=====================================
+
+使用每个动画自己的 bg_color_index 跳过背景色。
+
+// 合成示例
+void renderAnimOnBg(int bg_idx, int anim_idx, int frame_in_anim) {
+    AnimInfo& anim = animations[anim_idx];
+    int frame_idx = anim.start + frame_in_anim;
+    uint8_t skip_color = anim.bg_color_index;
+
+    // 1. 显示背景
+    showBackground(bg_idx);
+
+    // 2. 读取动画帧
+    File file = SD.open("/gifs/frames.bin");
+    file.seek((size_t)frame_idx * anim_frame_size);
+
+    uint8_t* pal_data = (uint8_t*)malloc(palette_size);
+    file.read(pal_data, palette_size);
+    uint16_t anim_palette[256];
+    for (int i = 0; i < colors; i++) {
+        anim_palette[i] = rgb888to565(pal_data[i*3], pal_data[i*3+1], pal_data[i*3+2]);
+    }
+    free(pal_data);
+
+    uint8_t* pixels = (uint8_t*)malloc(anim_width * anim_height);
+    file.read(pixels, anim_width * anim_height);
+    file.close();
+
+    // 3. 叠加（跳过背景色）
+    int offset_x = (bg_width - anim_width) / 2;
+    int offset_y = (bg_height - anim_height) / 2;
+
+    for (int y = 0; y < anim_height; y++) {
+        for (int x = 0; x < anim_width; x++) {
+            uint8_t color_idx = pixels[y * anim_width + x];
+            if (color_idx != skip_color) {
+                int fb_idx = (offset_y + y) * bg_width + (offset_x + x);
+                framebuffer[fb_idx] = anim_palette[color_idx];
+            }
+        }
+    }
+    free(pixels);
+
+    tft.pushImage(0, 0, bg_width, bg_height, framebuffer);
+}
+
+// 播放整个动画（带背景）
+void playAnimationWithBg(int bg_idx, int anim_idx, int delay_ms) {
+    AnimInfo& anim = animations[anim_idx];
+    for (int i = 0; i < anim.count; i++) {
+        renderAnimOnBg(bg_idx, anim_idx, i);
+        delay(delay_ms);
+    }
+}
+
+=====================================
+六、内存估算
+=====================================
+
+帧缓冲 (按背景尺寸):
+  280*240*2 = 134,400 bytes
+
+像素缓冲 (按背景尺寸):
+  280*240 = 67,200 bytes
+
+调色板:
+  256*2 = 512 bytes
+
+总计约需 ~200 KB RAM
+
+=====================================
+七、文件大小估算
+=====================================
+
+动画文件 (frames.bin, 160×160, P256):
+  frame_size = 768 + 25600 = 26368 bytes
+  78帧 × 26368 ≈ 2.0 MB
+
+背景文件 (backgrounds.bin, 280×240, P256):
+  bg_frame_size = 768 + 67200 = 67968 bytes
+  17帧 × 67968 ≈ 1.1 MB
+
+=====================================
+八、默认背景变体
+=====================================
+
+时间 (4): day, night, sunrise, sunset
+天气 (1): rainy
+节日 (7): spring_festival, christmas, birthday,
+          new_year, mid_autumn, halloween, valentines
+风格 (4): cyberpunk, steampunk, fantasy, space
+
+总计: base + 16 变体 = 17 张背景
+
+=====================================
